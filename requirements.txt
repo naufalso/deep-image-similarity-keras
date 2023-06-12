@@ -1,2 +1,4 @@
 tensorflow>=2.11.0
+tensorflow_addons
+tensorflow_hub
 tqdm
