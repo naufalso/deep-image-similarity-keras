@@ -1,13 +1,13 @@
 {
-    "rotation_range": 30.0,
-    "width_shift_range": 0.25,
-    "height_shift_range": 0.25,
+    "rotation_range": 15.0,
+    "width_shift_range": 0.2,
+    "height_shift_range": 0.2,
     "brightness_range": [
         0.5,
         1.5
     ],
-    "shear_range": 0.25,
-    "zoom_range": 0.25,
+    "shear_range": 0.2,
+    "zoom_range": 0.2,
     "horizontal_flip": true,
-    "vertical_flip": true
+    "vertical_flip": false
 }

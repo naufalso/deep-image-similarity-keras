@@ -17,13 +17,13 @@ class TripletDataset:
         self,
         dataset_path: str,
         batch_size: int,
-        target_size: Tuple[int, int],
+        target_size: int,
     ):
         """
         Args:
             dataset_path (str): Path to the dataset folder.
             batch_size (int): Batch size.
-            target_size (Tuple[int, int]): Target size of the images.
+            target_size int: Target size of the images.
         """
 
         # Check if dataset_path contains train, val, and test folders
@@ -37,7 +37,7 @@ class TripletDataset:
 
         self.dataset_path = dataset_path
         self.batch_size = batch_size
-        self.target_size = target_size
+        self.target_size = (target_size, target_size)
 
     def _triplet_pair_generator_function(
         self,
@@ -68,16 +68,17 @@ class TripletDataset:
         vertical_flip: bool = False,
         random_seed: Optional[int] = None,
     ) -> Tuple[
-        Iterator[Tuple[tf.Tensor, tf.Tensor]],
-        Iterator[Tuple[tf.Tensor, tf.Tensor]],
-        Iterator[Tuple[tf.Tensor, tf.Tensor]],
+        Tuple[
+            Iterator[Tuple[tf.Tensor, tf.Tensor]],
+            Iterator[Tuple[tf.Tensor, tf.Tensor]],
+            Iterator[Tuple[tf.Tensor, tf.Tensor]],
+        ],
+        Tuple[int, int, int],
     ]:
         """
         Creates triplet generators for training, validation, and test sets.
 
         Args:
-            batch_size (int): Batch size.
-            target_size (Tuple[int, int]): Target size of the images.
             rotation_range (int): Degree range for random rotations.
             width_shift_range (float): Fractional width shift range.
             height_shift_range (float): Fractional height shift range.
@@ -86,9 +87,17 @@ class TripletDataset:
             zoom_range (float): Zoom range.
             horizontal_flip (bool): Whether to perform random horizontal flips.
             vertical_flip (bool): Whether to perform random vertical flips.
+            random_seed (Optional[int]): Random seed.
 
         Returns:
-            Tuple[Iterator[Tuple[tf.Tensor, tf.Tensor]], Iterator[Tuple[tf.Tensor, tf.Tensor]], Iterator[Tuple[tf.Tensor, tf.Tensor]]]: Tuple of triplet generators for training, validation, and test sets.
+            Tuple[
+                Tuple[
+                    Iterator[Tuple[tf.Tensor, tf.Tensor]],
+                    Iterator[Tuple[tf.Tensor, tf.Tensor]],
+                    Iterator[Tuple[tf.Tensor, tf.Tensor]],
+                ],
+                Tuple[int, int, int],
+            ]: Tuple of triplet generators and step per epochs.
         """
 
         # Define data augmentators
@@ -113,6 +122,7 @@ class TripletDataset:
             seed = random_seed
 
         dataset_generator = []
+        dataset_step_per_epochs = []
 
         # Create triplet generators
         for split in ["train", "val", "test"]:
@@ -140,4 +150,7 @@ class TripletDataset:
 
             dataset_generator.append(triplet_generator)
 
-        return tuple(dataset_generator)
+            step_per_epoch = anchor_generator.samples // self.batch_size
+            dataset_step_per_epochs.append(step_per_epoch)
+
+        return tuple(dataset_generator), tuple(dataset_step_per_epochs)
