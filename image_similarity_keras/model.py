@@ -4,6 +4,7 @@ import os
 import tensorflow as tf
 import tensorflow_addons as tfa
 import tensorflow_hub as hub
+import json
 
 from typing import List
 
@@ -261,7 +262,8 @@ class SiameseModel:
         os.makedirs(model_path, exist_ok=True)
 
         # Save model architecture
-        model_json = self.to_json()
+        model_json_dict = self.to_json()
+        model_json = json.dumps(model_json_dict, indent=4)
 
         with open(
             os.path.join(model_path, f"{self.backbone_name}.json"), "w"
