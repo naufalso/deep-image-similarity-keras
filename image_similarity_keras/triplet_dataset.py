@@ -1,3 +1,5 @@
+# Author: Naufal Suryanto (https://github.com/naufalso)
+
 import os
 
 import tensorflow as tf

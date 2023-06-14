@@ -1,3 +1,5 @@
+# Author: Naufal Suryanto (https://github.com/naufalso)
+
 import os
 import shutil
 import random
@@ -109,9 +111,8 @@ def split_dataset(
             )
 
 
-if __name__ == "__main__":
-    """usage: dataset_splitter.py [-h] dataset_path output_path ratio
-
+def main():
+    """
     Split dataset into train, validation, and test sets.
 
     positional arguments:
@@ -147,3 +148,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     split_dataset(args.dataset_path, args.output_path, args.ratio, args.file_postfix)
+
+
+if __name__ == "__main__":
+    main()

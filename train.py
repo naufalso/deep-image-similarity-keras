@@ -1,3 +1,5 @@
+# Author: Naufal Suryanto (https://github.com/naufalso)
+
 import os
 import argparse
 import wandb
@@ -8,6 +10,24 @@ from image_similarity_keras.model import SiameseModel
 
 
 def main():
+    """Main function for training the model
+
+    Args:
+        dataset_path (str): Path to dataset
+        model_config (str): Path to model config file
+        augmentation_config (str): Path to augmentation config file
+        metrics_config (str): Path to metrics config file
+        batch_size (int): Batch size for training
+        optimizer (str): Optimizer to use for training
+        learning_rate (float): Learning rate for training
+        loss (str): Loss function to use for training
+        epochs (int): Number of epochs for training
+        finetune (bool): Whether to finetune the model
+        output_path (str): Path to output directory
+        wandb_project (str): Wandb project name
+    """
+
+    # Parse arguments
     parser = argparse.ArgumentParser(
         description="Argument parser for image similarity project"
     )
@@ -18,7 +38,7 @@ def main():
     parser.add_argument(
         "--model_config",
         type=str,
-        default="./configs/models/convnext_small.json",
+        required=True,
         help="Path to model config file",
     )
     parser.add_argument(
@@ -54,12 +74,7 @@ def main():
     parser.add_argument(
         "--output_path", type=str, default="./models/", help="Path to output directory"
     )
-    parser.add_argument(
-        "--wandb_project",
-        type=str,
-        default="image_similarity",
-        help="Wandb project name",
-    )
+    parser.add_argument("--with_wandb", action="store_true", help="Use wandb or not")
 
     args = parser.parse_args()
 
@@ -79,23 +94,24 @@ def main():
         metrics_config = json.load(f)
 
     # Initialize wandb
-    wandb.init(
-        project=args.wandb_project,
-        name=f"{model_config_ns.backbone_name}_{args.batch_size}b_{args.epochs}ep",
-        config={
-            "model/backbone": model_config_ns.backbone_name,
-            "model/image_size": model_config_ns.image_size,
-            "model/activation": "relu",
-            "model/fc_depths": model_config_ns.fc_depths,
-            "model/emb_dims": model_config_ns.emb_dims,
-            "train_config/finetune": args.finetune,
-            "train_config/learning_rate": args.learning_rate,
-            "train_config/optimizer": args.optimizer,
-            "train_config/loss": args.loss,
-            "train_config/batch_size": args.batch_size,
-            "train_config/epochs": args.epochs,
-        },
-    )
+    if args.with_wandb:
+        wandb.init(
+            name=f"{model_config_ns.backbone_name}_{args.batch_size}b_{args.epochs}ep",
+            config={
+                "dataset": args.dataset_path,
+                "model/backbone": model_config_ns.backbone_name,
+                "model/image_size": model_config_ns.image_size,
+                "model/activation": "relu",
+                "model/fc_depths": model_config_ns.fc_depths,
+                "model/emb_dims": model_config_ns.emb_dims,
+                "train_config/finetune": args.finetune,
+                "train_config/learning_rate": args.learning_rate,
+                "train_config/optimizer": args.optimizer,
+                "train_config/loss": args.loss,
+                "train_config/batch_size": args.batch_size,
+                "train_config/epochs": args.epochs,
+            },
+        )
 
     # Initialize dataset generator
     triplet_dataset = TripletDataset(
@@ -118,20 +134,17 @@ def main():
     os.makedirs(args.output_path, exist_ok=True)
 
     # Train model
-    history, evaluation = model.fit(
+    model.fit(
         dataset_generators,
         dataset_steps_per_epoch,
         args.epochs,
         args.output_path,
-        args.wandb_project,
+        args.with_wandb,
     )
 
     # Save model
-    model.save_weights(args.output_path)
+    model.save_model(args.output_path)
 
-    # TODO: Save history and evaluation
-
-    print(evaluation)
     print("Training complete!")
 
 

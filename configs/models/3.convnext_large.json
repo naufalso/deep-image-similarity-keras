@@ -1,0 +1,10 @@
+{
+    "backbone_name": "ConvNext_Large",
+    "backbone_hub_path": "https://tfhub.dev/sayakpaul/convnext_large_1k_224_fe/1",
+    "fc_depths": [
+        512,
+        256
+    ],
+    "emb_dims": 128,
+    "image_size": 224
+}
