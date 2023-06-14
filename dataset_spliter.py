@@ -125,7 +125,7 @@ def main():
     -h, --help    show this help message and exit
 
     Example usage:
-    python dataset_splitter.py /path/to/dataset /path/to/output 60,20,20
+    python3 dataset_splitter.py /path/to/dataset /path/to/output 60,20,20
     """
 
     parser = argparse.ArgumentParser(

@@ -1,6 +1,6 @@
 scipy
 tensorflow>=2.11.0
-tensorflow_addons
-tensorflow_hub
+tensorflow_addons==0.20.0
+tensorflow_hub==0.13.0
 matplotlib
 tqdm
