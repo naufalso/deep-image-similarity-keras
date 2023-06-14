@@ -4,9 +4,11 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A TensorFlow Keras implementation of a deep learning mode. for image similarity using a Siamese Network
+A TensorFlow Keras implementation of a deep learning model for image similarity using a Siamese Network.
 
 This project provides a simple and flexible framework for building and training deep learning models to measure the similarity between images.
+
+It can be used for several application such as: plagiarism check, image search, etc.
 
 ## Table of Contents
 
