@@ -1,6 +1,6 @@
 {
     "backbone_name": "ConvNext_XLarge",
-    "backbone_hub_path": "https://tfhub.dev/sayakpaul/convnext_xlarge_1k_224_fe/1",
+    "backbone_hub_path": "https://tfhub.dev/sayakpaul/convnext_xlarge_21k_1k_224_fe/1",
     "fc_depths": [
         512,
         256

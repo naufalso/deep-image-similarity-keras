@@ -127,10 +127,10 @@ class SiameseModel:
             *self.triplet_metrics.get_accuracy_metrics(),
         ]
 
-        if loss == "triplet":
+        if loss == "TripletSemiHardLoss":
             self.loss = tfa.losses.TripletSemiHardLoss()
         else:
-            raise ValueError(f"Loss {loss} is not supported.")
+            raise ValueError(f"Loss {loss} is not supported yet.")
 
         # Compile the model
         self.model.compile(
@@ -240,9 +240,9 @@ class SiameseModel:
                 "finetune": self.finetune,
                 "batch_size": self.batch_size,
                 "epochs": self.epochs,
-                "optimizer": self.optimizer.__class__.__name__,
-                "learning_rate": self.optimizer.lr.numpy(),
-                "loss": self.loss.__class__.__name__,
+                "optimizer": str(self.optimizer.__class__.__name__),
+                "learning_rate": float(self.optimizer.lr.numpy()),
+                "loss": str(self.loss.__class__.__name__),
             }
             model_config["training_config"] = training_config
 
