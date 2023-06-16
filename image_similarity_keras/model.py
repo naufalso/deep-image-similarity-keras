@@ -5,8 +5,9 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 import tensorflow_hub as hub
 import json
+import numpy as np
 
-from typing import List
+from typing import List, Union
 
 from .metrics import TripletMetrics
 
@@ -19,6 +20,7 @@ class SiameseModel:
         fc_depths: List[int] = [512, 256],
         emb_dims: int = 128,
         image_size: int = 224,
+        **kwargs,
     ):
         """
         Initializes a SiameseModel object with the given parameters.
@@ -44,7 +46,37 @@ class SiameseModel:
         self.optimizer = None
         self.epochs = None
 
-    def build(self, finetune: bool = False):
+    @staticmethod
+    def load_model(model_path: str, compile: bool = False, **kwargs):
+        """
+        Loads the model from the given path.
+
+        Args:
+            model_path (str): Path to the model directory.
+
+        Returns:
+            SiameseModel: The loaded SiameseModel object.
+        """
+        # Load model config
+        with open(os.path.join(model_path, "configs.json"), "r") as f:
+            model_config = json.load(f)
+
+        # Initialize model
+        model = SiameseModel(**model_config)
+
+        # Build the model
+        model.build(model_config["training_config"].get("finetune", False))
+
+        # Compile the model
+        if compile:
+            model.compile(**model_config["training_config"])
+
+        # Load model weights
+        model.model.load_weights(os.path.join(model_path, "weights"))
+
+        return model
+
+    def build(self, finetune: bool = False, **kwargs):
         """
         Builds the SiameseModel object with the given parameters.
 
@@ -99,6 +131,7 @@ class SiameseModel:
         learning_rate: float,
         loss: str,
         metrics_config: dict,
+        **kwargs,
     ):
         """
         Compiles the model with the given parameters.
@@ -148,6 +181,7 @@ class SiameseModel:
         epochs,
         output_path,
         with_wandb=True,
+        **kwargs,
     ):
         """
         Fits the model with the given parameters.
@@ -221,6 +255,90 @@ class SiameseModel:
 
         return train_history, evaluation_results
 
+    @tf.function
+    def predict(self, images: Union[np.ndarray, tf.Tensor]):
+        """
+        Predicts the embeddings of the given images.
+
+        Args:
+            images (Union[np.ndarray, tf.Tensor]): Images to predict the embeddings.
+
+        Returns:
+            embeddings: np.ndarray
+        """
+        assert self.model is not None, "Model is not built yet"
+
+        if isinstance(images, np.ndarray):
+            images = tf.convert_to_tensor(images)
+
+        embeddings = self.model(images)
+
+        return embeddings
+
+    def compare(
+        self,
+        image1: Union[np.ndarray, tf.Tensor],
+        image2: Union[np.ndarray, tf.Tensor],
+        distance_threshold: float = 0.5,
+    ):
+        """
+        Compares the distance of two images.
+
+        Args:
+            image1 (Union[np.ndarray, tf.Tensor]): First image.
+            image2 (Union[np.ndarray, tf.Tensor]): Second image.
+
+        Returns:
+            is_same: bool
+            distance: float
+        """
+        assert self.model is not None, "Model is not built yet"
+
+        if isinstance(image1, np.ndarray):
+            image1 = tf.convert_to_tensor(image1)
+        if isinstance(image2, np.ndarray):
+            image2 = tf.convert_to_tensor(image2)
+
+        images = tf.stack([image1, image2], axis=0)
+        embs = self.predict(images)
+
+        distance = tf.norm(embs[0] - embs[1])
+
+        if distance < distance_threshold:
+            return True, distance
+        else:
+            return False, distance
+
+    def query(
+        self,
+        query_image: Union[np.ndarray, tf.Tensor],
+        database_embeddings: Union[np.ndarray, tf.Tensor],
+        top_k: int = 10,
+    ):
+        """
+        Queries the database with the given query image.
+
+        Args:
+            query_image (Union[np.ndarray, tf.Tensor]): Query image.
+            database_embeddings (Union[np.ndarray, tf.Tensor]): Database embeddings.
+            top_k (int, optional): Number of top results. Defaults to 10.
+
+        Returns:
+            top_k_results: List[int]
+        """
+        assert self.model is not None, "Model is not built yet"
+
+        if isinstance(query_image, np.ndarray):
+            query_image = tf.convert_to_tensor(query_image)
+        if isinstance(database_embeddings, np.ndarray):
+            database_embeddings = tf.convert_to_tensor(database_embeddings)
+
+        query_emb = self.predict(query_image)
+        distances = tf.norm(query_emb - database_embeddings, axis=1)
+        top_k_results = tf.argsort(distances)[:top_k]
+
+        return top_k_results
+
     def to_json(self):
         """
         Returns the model configuration as a dictionary.
@@ -258,17 +376,15 @@ class SiameseModel:
         assert self.model is not None, "Model is not built yet"
 
         model_name = f"{self.backbone_name}_{self.batch_size}b_{self.epochs}ep_final"
-        model_path = os.path.join(output_path, "model", model_name)
+        model_path = os.path.join(output_path, model_name)
         os.makedirs(model_path, exist_ok=True)
 
         # Save model architecture
         model_json_dict = self.to_json()
         model_json = json.dumps(model_json_dict, indent=4)
 
-        with open(
-            os.path.join(model_path, f"{self.backbone_name}.json"), "w"
-        ) as json_file:
+        with open(os.path.join(model_path, "configs.json"), "w") as json_file:
             json_file.write(model_json)
 
         # Save model weights
-        self.model.save_weights(os.path.join(model_path, self.backbone_name + ".h5"))
+        self.model.save_weights(os.path.join(model_path, "weights"))

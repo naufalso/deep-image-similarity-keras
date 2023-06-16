@@ -29,7 +29,7 @@ def main():
 
     # Parse arguments
     parser = argparse.ArgumentParser(
-        description="Argument parser for image similarity project"
+        description="Argument parser for training the image similarity model"
     )
 
     parser.add_argument(
@@ -147,6 +147,10 @@ def main():
 
     # Save model
     model.save_model(args.output_path)
+
+    # Finish wandb run
+    if args.with_wandb:
+        wandb.finish()
 
     print("Training complete!")
 
