@@ -64,7 +64,10 @@ python3 train.py --model_config [/path/to/model_config] --dataset_path [/path/to
 
 ## Dataset
 
-[TBD]
+1. NFT Art collection 2021 https://www.kaggle.com/datasets/vepnar/nft-art-dataset?resource=download-directory 
+2. NFT Azuki dataset https://huggingface.co/datasets/huggingnft/azuki
+3. NFT Crypto Coven dataset https://www.kaggle.com/datasets/harrywang/crypto-coven?select=witch_images
+4. NFT BAYC (Bored Ape Youth Club) https://www.kaggle.com/datasets/stanleyjzheng/bored-apes-yacht-club?select=bayc 
 
 ## Training
 
